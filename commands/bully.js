@@ -1,6 +1,6 @@
 const fs = require('fs')
 var say = require('say')
-var ttsFilename = 'tts.wav'
+var ttsFilename = 'tts'
 
 const isRelevant = msg => {
     const mentionedUsers = msg.mentions.users.first(2)
@@ -8,35 +8,39 @@ const isRelevant = msg => {
 }
 
 const run = msg => {
+    const ttsPath = `${ttsFilename}_${msg.nonce}.wav`
     const targetUser = msg.mentions.users.first(2)[1]
-    createTTS(targetUser)
-    if (!fs.existsSync(ttsFilename)) {
-        return
-    }
-
-    const channel = msg.guild.member(targetUser).voice.channel
-    if (channel) {
-        bullyTarget(channel)
-    } else {
-        console.info('Target is not in a voice channel')
-    }
-}
-
-function createTTS(target) {
-    say.export(`Hey ${target.username}, you suck`, null, 1, ttsFilename, function (err) {
-        if (err) {
-            console.error(err)
+    createTTS(targetUser, ttsPath, () => {
+        if (fs.existsSync(ttsPath)) {
+            const channel = msg.guild.member(targetUser).voice.channel
+            if (channel) {
+                bullyTarget(channel, ttsPath)
+            } else {
+                console.info('Target is not in a voice channel')
+            }
+        } else {
+            console.error('Could not find TTS file')
         }
     })
 }
 
-function bullyTarget(channel) {
+function createTTS(target, ttsPath, resultFn) {
+    say.export(`Hey ${target.username}, you suck`, null, 1, ttsPath, (err) => {
+        if (err) {
+            console.error(err)
+        } else {
+            resultFn()
+        }
+    })
+}
+
+function bullyTarget(channel, ttsPath) {
     channel.join().then(connection => {
-        const dispatcher = connection.play(ttsFilename)
+        const dispatcher = connection.play(ttsPath)
         dispatcher.on('finish', () => {
             dispatcher.destroy()
             channel.leave()
-            fs.unlinkSync(ttsFilename)
+            fs.unlinkSync(ttsPath)
         })
     }).catch(e => {
         console.error(e)
