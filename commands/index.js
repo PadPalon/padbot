@@ -1,10 +1,11 @@
 const commands = [
     require('./bully'),
+    require('./fart_bomb'),
     require('./fuck')
 ]
 
-const run = (msg) => {
-    commands.find(cmd => cmd.isRelevant(msg)).run(msg)
+const run = (msg, bot) => {
+    commands.find(cmd => cmd.isRelevant(msg)).run(msg, bot)
 }
 
 module.exports = {
