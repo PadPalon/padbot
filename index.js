@@ -12,6 +12,6 @@ bot.on('ready', () => {
 bot.on('message', msg => {
     const mentionedUser = msg.mentions.users.first()
     if (mentionedUser === bot.user) {
-        command.run(msg)
+        command.run(msg, bot)
     }
 })

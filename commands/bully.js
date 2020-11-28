@@ -13,10 +13,10 @@ const run = msg => {
     createTTS(targetUser, ttsPath, () => {
         if (fs.existsSync(ttsPath)) {
             const channel = msg.guild.member(targetUser).voice.channel
-            if (channel) {
+            if (channel && channel.joinable) {
                 bullyTarget(channel, ttsPath)
             } else {
-                console.info('Target is not in a voice channel')
+                console.info('Target is not in a joinable voice channel')
             }
         } else {
             console.error('Could not find TTS file')
@@ -24,7 +24,7 @@ const run = msg => {
     })
 }
 
-function createTTS(target, ttsPath, resultFn) {
+const createTTS = (target, ttsPath, resultFn) => {
     say.export(`Hey ${target.username}, you suck`, null, 1, ttsPath, (err) => {
         if (err) {
             console.error(err)
@@ -34,7 +34,7 @@ function createTTS(target, ttsPath, resultFn) {
     })
 }
 
-function bullyTarget(channel, ttsPath) {
+const bullyTarget = (channel, ttsPath) => {
     channel.join().then(connection => {
         const dispatcher = connection.play(ttsPath)
         dispatcher.on('finish', () => {
