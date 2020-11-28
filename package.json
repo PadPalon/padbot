@@ -1,0 +1,34 @@
+{
+  "name": "padbot",
+  "version": "0.0.1",
+  "description": "discord bot by PadPalon",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PadPalon/padbot.git"
+  },
+  "keywords": [
+    "discord",
+    "bot"
+  ],
+  "author": "luca.neukom@gmail.com",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/PadPalon/padbot/issues"
+  },
+  "homepage": "https://github.com/PadPalon/padbot#readme",
+  "dependencies": {
+    "@discordjs/opus": "^0.3.3",
+    "discord.js": "^12.5.1",
+    "dotenv": "^8.2.0",
+    "ffmpeg-static": "^4.2.7",
+    "say": "^0.16.0"
+  },
+  "devDependencies": {
+    "eslint": "^7.14.0"
+  }
+}
