@@ -2,23 +2,30 @@ const fs = require('fs')
 var say = require('say')
 var ttsFilename = 'tts'
 
-const isRelevant = msg => {
-    const mentionedUsers = msg.mentions.users.first(2)
-    return msg.content.includes('bully') && mentionedUsers.length == 2
-}
+const { SlashCommandBuilder } = require('@discordjs/builders')
+const { 
+    joinVoiceChannel,
+    createAudioPlayer,
+    createAudioResource,
+    AudioPlayerStatus
+} = require('@discordjs/voice')
 
-const run = msg => {
-    const ttsPath = `${ttsFilename}_${msg.nonce}.wav`
-    const targetUser = msg.mentions.users.first(2)[1]
+const run = interaction => {
+    const ttsPath = `${ttsFilename}_${interaction.id}.wav`
+    const targetUser = interaction.options.getUser('target')
     createTTS(targetUser, ttsPath, () => {
         if (fs.existsSync(ttsPath)) {
-            const channel = msg.guild.member(targetUser).voice.channel
-            if (channel && channel.joinable) {
-                bullyTarget(channel, ttsPath)
-            } else {
-                console.info('Target is not in a joinable voice channel')
-            }
+            interaction.guild.members.fetch(targetUser).then(user => {
+                const channel = user.voice.channel
+                if (channel && channel.joinable) {
+                    interaction.reply({ content: 'The sucker won\'t see it coming!', ephemeral: true })
+                    bullyTarget(channel, ttsPath)
+                } else {
+                    interaction.reply({ content: 'That person doesn\'t seem to be online. Get them yourself!', ephemeral: true })
+                }
+            })
         } else {
+            interaction.reply({ content: 'It seems I\'ve lost my voice.', ephemeral: true })
             console.error('Could not find TTS file')
         }
     })
@@ -35,19 +42,31 @@ const createTTS = (target, ttsPath, resultFn) => {
 }
 
 const bullyTarget = (channel, ttsPath) => {
-    channel.join().then(connection => {
-        const dispatcher = connection.play(ttsPath)
-        dispatcher.on('finish', () => {
-            dispatcher.destroy()
-            channel.leave()
-            fs.unlinkSync(ttsPath)
-        })
-    }).catch(e => {
-        console.error(e)
+    const player = createAudioPlayer()
+
+    const connection = joinVoiceChannel({
+        channelId: channel.id,
+        guildId: channel.guild.id,
+        adapterCreator: channel.guild.voiceAdapterCreator,
+    })
+
+    const resource = createAudioResource(ttsPath)
+    player.play(resource)
+    connection.subscribe(player)
+
+    player.once(AudioPlayerStatus.Idle, () => {
+        connection.destroy()
+        player.stop()
+        fs.unlink(ttsPath)
     })
 }
 
 module.exports = {
-    isRelevant,
-    run
+    data: new SlashCommandBuilder()
+        .setName('bully')
+        .setDescription('Bully someone')
+        .addUserOption(option => option.setName('target').setDescription('The target to bully')),
+    execute: async interaction => {
+        run(interaction)
+    }
 }
